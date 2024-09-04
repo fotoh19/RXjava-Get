@@ -1,11 +1,11 @@
 package com.note.rxjavaapi.view
 
 import android.annotation.SuppressLint
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import com.note.rxjavaapi.R
 import com.note.rxjavaapi.data.RetrofitInstance
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
