@@ -1,19 +1,21 @@
 package com.note.rxjavaapi.view
 
-import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.note.rxjavaapi.R
-import com.note.rxjavaapi.data.RetrofitInstance
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.schedulers.Schedulers
+import com.note.rxjavaapi.repository.PostRepository
+import com.note.rxjavaapi.viewmodel.PostViewModel
 
+@Suppress("UNCHECKED_CAST")
 class MainActivity : AppCompatActivity() {
     private lateinit var fetchButton: Button
     private lateinit var textView: TextView
+    private lateinit var postViewModel: PostViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,24 +24,28 @@ class MainActivity : AppCompatActivity() {
         fetchButton = findViewById(R.id.fetchButton)
         textView = findViewById(R.id.textView)
 
-        fetchButton.setOnClickListener {
-            fetchData()
-        }
-    }
+        val repository = PostRepository()
 
-    @SuppressLint("CheckResult")
-    private fun fetchData() {
-        RetrofitInstance.api.getPosts()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ posts ->
-                val stringBuilder = StringBuilder()
-                for (post in posts) {
-                    stringBuilder.append("Title: ${post.title}\nBody: ${post.body}\n\n")
-                }
-                textView.text = stringBuilder.toString()
-            }, { error ->
-                Log.e("MainActivity", "Error: ${error.message}")
-            })
+        postViewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return PostViewModel(repository) as T
+            }
+        })[PostViewModel::class.java]
+
+        fetchButton.setOnClickListener {
+            postViewModel.fetchPosts()
+        }
+
+        postViewModel.posts.observe(this) { posts ->
+            val stringBuilder = StringBuilder()
+            for (post in posts) {
+                stringBuilder.append("Title: ${post.title}\nBody: ${post.body}\n\n")
+            }
+            textView.text = stringBuilder.toString()
+        }
+
+        postViewModel.error.observe(this) { error ->
+            Toast.makeText(this, "Error: $error", Toast.LENGTH_LONG).show()
+        }
     }
 }
